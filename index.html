@@ -540,14 +540,15 @@
 
     function atualizarSaldoVisual() {
       document.getElementById('saldo-texto').innerText = formatarMoeda(saldo);
-      localStorage.setItem('banca_saldo', saldo);
+      localStorage.setItem('banca_saldo', saldo.toFixed(2));
     }
 
-    // Adicionar Saldo do Gerente (O que estava faltando!)
+    // Adicionar Saldo do Gerente - CORRIGIDO
     function adicionarSaldoGerente() {
-      saldo += 100.00;
+      saldo = saldo + 100.00;  // Garante que está somando corretamente
       atualizarSaldoVisual();
       adicionarAoExtrato("Crédito demonstrativo adicionado pelo gerente", 100.00, "ganho");
+      console.log("Novo saldo após gerente:", saldo); // Debug
     }
 
     // Renderizar o Guia Rápido
@@ -613,13 +614,16 @@
         return;
       }
 
-      saldo -= valor;
+      saldo = saldo - valor;  // Garante subtração correta
       atualizarSaldoVisual();
 
       apostaAtiva = { tipo, palpite, valor };
 
       adicionarAoExtrato(`Aposta em ${tipo.toUpperCase()} • N° ${palpite}`, -valor, 'perda');
       alert(`Palpite de ${formatarMoeda(valor)} registrado no número ${palpite}! Agora clique em "Girar Globo" para rodar o sorteio.`);
+      
+      // Limpar formulário
+      document.getElementById('form-aposta').reset();
     });
 
     function encontrarBichoPorMilhar(milhar) {
@@ -692,7 +696,7 @@
 
       if (ganhou) {
         const premioGanho = valor * multiplicador;
-        saldo += premioGanho;
+        saldo = saldo + premioGanho;  // Garante soma correta
         atualizarSaldoVisual();
         adicionarAoExtrato(`🎉 GANHOU! Prêmio da Aposta N° ${palpite}`, premioGanho, 'ganho');
         alert(`Parabéns! Você acertou e levou ${formatarMoeda(premioGanho)}!`);
