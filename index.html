@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banca Bicho - Painel Interativo</title>
+  <style>
+    :root {
+      --primary: #15803d;
+      --primary-dark: #166534;
+      --primary-light: #bbf7d0;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e8f0;
+      --accent: #eab308;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background-color: var(--primary-dark);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+      background: var(--primary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+    }
+
+    .logo-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .logo-text span {
+      font-size: 0.75rem;
+      color: var(--primary-light);
+      display: block;
+    }
+
+    .badge-demo {
+      background: var(--accent);
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      main {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 2rem;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.5rem;
+      grid-column: 1 / -1;
+    }
+
+    @media (min-width: 768px) {
+      .hero-section {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+
+    .hero-text h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-text p {
+      color: var(--primary-light);
+    }
+
+    .saldo-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-width: 250px;
+    }
+
+    .saldo-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 1.25rem;
+      border-radius: 12px;
+    }
+
+    .saldo-card span {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary-light);
+    }
+
+    .saldo-card strong {
+      display: block;
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: white;
+      margin-top: 0.25rem;
+    }
+
+    .btn-gerente {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn-gerente:hover {
+      opacity: 0.9;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title span.number {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* Formulario de Jogo */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+      margin-top: 1rem;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    /* Extração e Resultados */
+    .resultado-linha {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .resultado-linha:last-child {
+      border: none;
+    }
+
+    .resultado-premio {
+      font-weight: bold;
+      color: var(--text-light);
+    }
+
+    .resultado-numero {
+      font-size: 1.25rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+
+    .resultado-bicho {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Guia de Bichos */
+    .guia-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .bicho-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .bicho-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .bicho-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      border-color: var(--primary);
+    }
+
+    .bicho-card .emoji {
+      font-size: 1.5rem;
+      display: block;
+    }
+
+    .bicho-card .nome {
+      font-size: 0.75rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    .bicho-card .grupo {
+      font-size: 0.7rem;
+      color: var(--text-light);
+    }
+
+    .bicho-card .dezenas {
+      font-size: 0.65rem;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 0.1rem 0.25rem;
+      border-radius: 4px;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .bicho-card:hover .dezenas {
+      display: inline-block;
+    }
+
+    /* Extrato de Transações */
+    .extrato-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .transacao {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: var(--bg);
+      font-size: 0.85rem;
+    }
+
+    .transacao.ganho {
+      border-left: 4px solid var(--success);
+    }
+
+    .transacao.perda {
+      border-left: 4px solid var(--danger);
+    }
+
+    /* Rodapé */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">🎰</div>
+      <div class="logo-text">
+        <h1>Banca Bicho</h1>
+        <span>Painel Demonstrativo Interativo</span>
+      </div>
+    </div>
+    <span class="badge-demo">Ambiente de Simulação</span>
+  </header>
+
+  <main>
+    <!-- Seção de Cabeçalho / Saldo -->
+    <section class="hero-section">
+      <div class="hero-text">
+        <h2>Seu ponto de jogo,<br>simples e ligeiro.</h2>
+        <p>Faça apostas fictícias, simule extrações e teste sua sorte!</p>
+      </div>
+      <div class="saldo-area">
+        <div class="saldo-card">
+          <span>Saldo disponível</span>
+          <strong id="saldo-texto">R$ 2.345,00</strong>
+        </div>
+        <button onclick="adicionarSaldoGerente()" class="btn-gerente">
+          ⚡ Adicionar + R$ 100,00 (Gerente)
+        </button>
+      </div>
+    </section>
+
+    <!-- Coluna da Esquerda (Aposta e Resultados) -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+      <!-- Seção 01: Fazer Jogo -->
+      <section class="card">
+        <div class="card-title">
+          <span class="number">01</span> Fazer Aposta
+        </div>
+        <form id="form-aposta">
+          <div class="form-group">
+            <label for="tipo">Tipo de Aposta</label>
+            <select id="tipo" class="form-control" onchange="atualizarPlaceholderPalpite()">
+              <option value="milhar">Milhar (4 dígitos)</option>
+              <option value="centena">Centena (3 dígitos)</option>
+              <option value="grupo">Grupo (01 a 25)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="palpite">Palpite</label>
+            <input type="number" id="palpite" class="form-control" placeholder="Ex: 2580" required>
+          </div>
+          <div class="form-group">
+            <label for="valor">Valor da Aposta (R$)</label>
+            <input type="number" id="valor" class="form-control" min="1" max="1000" placeholder="Ex: 5" required>
+          </div>
+          <button type="submit" class="btn">Registrar Aposta Fictícia</button>
+        </form>
+      </section>
+
+      <!-- Seção 02: Resultados e Extração -->
+      <section class="card">
+        <div class="card-title">
+          <span>🎰</span> Extração Atual
+        </div>
+        <div id="resultados-container">
+          <!-- Gerado via JavaScript -->
+        </div>
+        <button onclick="realizarSorteio()" class="btn btn-secondary">Girar Globo / Sorteio 🎲</button>
+      </section>
+    </div>
+
+    <!-- Coluna da Direita (Guia de Bichos e Extrato) -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+      <!-- Seção 03: Guia de Bichos -->
+      <section class="card">
+        <div class="guia-header">
+          <h3>Guia dos Bichos</h3>
+          <input type="text" id="busca-bicho" class="form-control" style="width: 100%; max-width: 180px; padding: 0.4rem;" placeholder="🔍 Buscar bicho..." oninput="filtrarBichos()">
+        </div>
+        <div class="bicho-grid" id="bichos-container">
+          <!-- Carregado via JS -->
+        </div>
+      </section>
+
+      <!-- Seção 04: Extrato / Movimento -->
+      <section class="card">
+        <div class="card-title">
+          <span>📋</span> Movimento Recente
+        </div>
+        <div class="extrato-lista" id="extrato-container">
+          <!-- Preenchido pelo histórico -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>Banca Bicho © 2026 • Sem depósitos ou transações financeiras reais (Fictício para estudos)</p>
+  </footer>
+
+  <script>
+    // Banco de Dados do Jogo do Bicho
+    const BICHOS = [
+      { grupo: "01", nome: "Avestruz", emoji: "🪶", dezenas: ["01", "02", "03", "04"] },
+      { grupo: "02", nome: "Águia", emoji: "🦅", dezenas: ["05", "06", "07", "08"] },
+      { grupo: "03", nome: "Burro", emoji: "🫏", dezenas: ["09", "10", "11", "12"] },
+      { grupo: "04", nome: "Borboleta", emoji: "🦋", dezenas: ["13", "14", "15", "16"] },
+      { grupo: "05", nome: "Cachorro", emoji: "🐕", dezenas: ["17", "18", "19", "20"] },
+      { grupo: "06", nome: "Cabra", emoji: "🐐", dezenas: ["21", "22", "23", "24"] },
+      { grupo: "07", nome: "Carneiro", emoji: "🐏", dezenas: ["25", "26", "27", "28"] },
+      { grupo: "08", nome: "Camelo", emoji: "🐫", dezenas: ["29", "30", "31", "32"] },
+      { grupo: "09", nome: "Cobra", emoji: "🐍", dezenas: ["33", "34", "35", "36"] },
+      { grupo: "10", nome: "Coelho", emoji: "🐇", dezenas: ["37", "38", "39", "40"] },
+      { grupo: "11", nome: "Cavalo", emoji: "🐎", dezenas: ["41", "42", "43", "44"] },
+      { grupo: "12", nome: "Elefante", emoji: "🐘", dezenas: ["45", "46", "47", "48"] },
+      { grupo: "13", nome: "Galo", emoji: "🐓", dezenas: ["49", "50", "51", "52"] },
+      { grupo: "14", nome: "Gato", emoji: "🐈", dezenas: ["53", "54", "55", "56"] },
+      { grupo: "15", nome: "Jacaré", emoji: "🐊", dezenas: ["57", "58", "59", "60"] },
+      { grupo: "16", nome: "Leão", emoji: "🦁", dezenas: ["61", "62", "63", "64"] },
+      { grupo: "17", nome: "Macaco", emoji: "🐒", dezenas: ["65", "66", "67", "68"] },
+      { grupo: "18", nome: "Porco", emoji: "🐖", dezenas: ["69", "70", "71", "72"] },
+      { grupo: "19", nome: "Pavão", emoji: "🦚", dezenas: ["73", "74", "75", "76"] },
+      { grupo: "20", nome: "Peru", emoji: "🦃", dezenas: ["77", "78", "79", "80"] },
+      { grupo: "21", nome: "Touro", emoji: "🐂", dezenas: ["81", "82", "83", "84"] },
+      { grupo: "22", nome: "Tigre", emoji: "🐅", dezenas: ["85", "86", "87", "88"] },
+      { grupo: "23", nome: "Urso", emoji: "🐻", dezenas: ["89", "90", "91", "92"] },
+      { grupo: "24", nome: "Veado", emoji: "🦌", dezenas: ["93", "94", "95", "96"] },
+      { grupo: "25", nome: "Vaca", emoji: "🐄", dezenas: ["97", "98", "99", "00"] }
+    ];
+
+    // Variáveis de Estado salvas no Navegador (LocalStorage)
+    let saldo = parseFloat(localStorage.getItem('banca_saldo')) || 2345.00;
+    let historico = JSON.parse(localStorage.getItem('banca_historico')) || [
+      { mensagem: "Saldo demonstrativo inicial", valor: 2345.00, estilo: "ganho", data: "13:50" }
+    ];
+    let apostaAtiva = null;
+    let resultadosAtuais = [];
+
+    // Formatar Valor Monetário
+    function formatarMoeda(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Inicialização
+    window.onload = () => {
+      atualizarSaldoVisual();
+      renderizarBichos();
+      renderizarHistorico();
+      inicializarResultadosFicticios();
+      atualizarPlaceholderPalpite();
+    };
+
+    function atualizarSaldoVisual() {
+      document.getElementById('saldo-texto').innerText = formatarMoeda(saldo);
+      localStorage.setItem('banca_saldo', saldo);
+    }
+
+    // Adicionar Saldo do Gerente (O que estava faltando!)
+    function adicionarSaldoGerente() {
+      saldo += 100.00;
+      atualizarSaldoVisual();
+      adicionarAoExtrato("Crédito demonstrativo adicionado pelo gerente", 100.00, "ganho");
+    }
+
+    // Renderizar o Guia Rápido
+    function renderizarBichos() {
+      const container = document.getElementById('bichos-container');
+      container.innerHTML = '';
+      BICHOS.forEach(b => {
+        container.innerHTML += `
+          <div class="bicho-card" data-nome="${b.nome.toLowerCase()}" data-grupo="${b.grupo}">
+            <span class="emoji">${b.emoji}</span>
+            <span class="nome">${b.nome}</span>
+            <span class="grupo">${b.grupo}</span>
+            <span class="dezenas">${b.dezenas.join(', ')}</span>
+          </div>
+        `;
+      });
+    }
+
+    // Filtro de Busca
+    function filtrarBichos() {
+      const busca = document.getElementById('busca-bicho').value.toLowerCase();
+      const cards = document.querySelectorAll('.bicho-card');
+      cards.forEach(card => {
+        const nome = card.dataset.nome;
+        const grupo = card.dataset.grupo;
+        if (nome.includes(busca) || grupo.includes(busca)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Troca de Placeholders
+    function atualizarPlaceholderPalpite() {
+      const tipo = document.getElementById('tipo').value;
+      const input = document.getElementById('palpite');
+      if (tipo === 'milhar') {
+        input.placeholder = "4 dígitos (Ex: 2580)";
+        input.max = "9999";
+        input.min = "0000";
+      } else if (tipo === 'centena') {
+        input.placeholder = "3 dígitos (Ex: 580)";
+        input.max = "999";
+        input.min = "000";
+      } else {
+        input.placeholder = "Grupo de 01 a 25";
+        input.max = "25";
+        input.min = "1";
+      }
+      input.value = '';
+    }
+
+    // Registrar Aposta
+    document.getElementById('form-aposta').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const tipo = document.getElementById('tipo').value;
+      const palpite = document.getElementById('palpite').value.toString().padStart(tipo === 'milhar' ? 4 : tipo === 'centena' ? 3 : 2, '0');
+      const valor = parseFloat(document.getElementById('valor').value);
+
+      if (valor > saldo) {
+        alert("Sem saldo! Clique no botão do gerente para ganhar mais R$ 100,00.");
+        return;
+      }
+
+      saldo -= valor;
+      atualizarSaldoVisual();
+
+      apostaAtiva = { tipo, palpite, valor };
+
+      adicionarAoExtrato(`Aposta em ${tipo.toUpperCase()} • N° ${palpite}`, -valor, 'perda');
+      alert(`Palpite de ${formatarMoeda(valor)} registrado no número ${palpite}! Agora clique em "Girar Globo" para rodar o sorteio.`);
+    });
+
+    function encontrarBichoPorMilhar(milhar) {
+      const dezena = milhar.slice(-2);
+      return BICHOS.find(b => b.dezenas.includes(dezena)) || BICHOS[0];
+    }
+
+    function inicializarResultadosFicticios() {
+      const padroes = ["2580", "1234", "3690", "0000", "1470"];
+      resultadosAtuais = padroes.map((num, i) => {
+        return { premio: `${i+1}º`, numero: num, bicho: encontrarBichoPorMilhar(num) };
+      });
+      desenharTabelaResultados();
+    }
+
+    function desenharTabelaResultados() {
+      const container = document.getElementById('resultados-container');
+      container.innerHTML = '';
+      resultadosAtuais.forEach(res => {
+        container.innerHTML += `
+          <div class="resultado-linha">
+            <span class="resultado-premio">${res.premio} Prêmio</span>
+            <span class="resultado-numero">${res.numero}</span>
+            <span class="resultado-bicho">${res.bicho.emoji} ${res.bicho.nome}</span>
+          </div>
+        `;
+      });
+    }
+
+    // Sorteio
+    function realizarSorteio() {
+      resultadosAtuais = [];
+      for (let i = 1; i <= 5; i++) {
+        const num = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        resultadosAtuais.push({
+          premio: `${i}º`,
+          numero: num,
+          bicho: encontrarBichoPorMilhar(num)
+        });
+      }
+      desenharTabelaResultados();
+
+      if (apostaAtiva) {
+        verificarGanhador();
+      } else {
+        adicionarAoExtrato("Novo Sorteio da Extração Realizado 🎰", 0, '');
+      }
+    }
+
+    // Verificar se acertou o palpite
+    function verificarGanhador() {
+      const { tipo, palpite, valor } = apostaAtiva;
+      const primeiroPremio = resultadosAtuais[0];
+      let ganhou = false;
+      let multiplicador = 0;
+
+      if (tipo === 'milhar' && primeiroPremio.numero === palpite) {
+        ganhou = true;
+        multiplicador = 4000;
+      } else if (tipo === 'centena' && primeiroPremio.numero.slice(-3) === palpite) {
+        ganhou = true;
+        multiplicador = 600;
+      } else if (tipo === 'grupo') {
+        const bichoDoPrimeiroPremio = primeiroPremio.bicho.grupo;
+        if (bichoDoPrimeiroPremio === palpite) {
+          ganhou = true;
+          multiplicador = 18;
+        }
+      }
+
+      if (ganhou) {
+        const premioGanho = valor * multiplicador;
+        saldo += premioGanho;
+        atualizarSaldoVisual();
+        adicionarAoExtrato(`🎉 GANHOU! Prêmio da Aposta N° ${palpite}`, premioGanho, 'ganho');
+        alert(`Parabéns! Você acertou e levou ${formatarMoeda(premioGanho)}!`);
+      } else {
+        alert(`O primeiro prêmio deu ${primeiroPremio.numero} (${primeiroPremio.bicho.nome}). Não foi dessa vez!`);
+      }
+      
+      apostaAtiva = null; 
+    }
+
+    // Gerenciar Histórico de Transações no UI e no LocalStorage
+    function adicionarAoExtrato(mensagem, valor, estilo) {
+      const data = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      historico.unshift({ mensagem, valor, estilo, data });
+      
+      // Limitar a 15 transações para não lotar a tela
+      if (historico.length > 15) historico.pop();
+
+      localStorage.setItem('banca_historico', JSON.stringify(historico));
+      renderizarHistorico();
+    }
+
+    function renderizarHistorico() {
+      const container = document.getElementById('extrato-container');
+      container.innerHTML = '';
+      historico.forEach(item => {
+        const valorTexto = item.valor !== 0 ? `<b>${item.valor > 0 ? '+' : ''}${formatarMoeda(item.valor)}</b>` : '';
+        container.innerHTML += `
+          <div class="transacao ${item.estilo}">
+            <div>
+              <span>${item.mensagem}</span><br>
+              <small style="color: var(--text-light);">${item.data}</small>
+            </div>
+            <div>${valorTexto}</div>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
