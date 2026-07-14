@@ -76,6 +76,24 @@
       border-radius: 9999px;
     }
 
+    .usuario-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: white;
+    }
+
+    .usuario-info button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
     main {
       max-width: 1200px;
       margin: 2rem auto;
@@ -243,6 +261,11 @@
       background: var(--primary-dark);
     }
 
+    .btn:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+
     .btn-secondary {
       background: #e2e8f0;
       color: #334155;
@@ -384,6 +407,20 @@
       border-top: 1px solid var(--border);
       margin-top: 4rem;
     }
+
+    .loading {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
   </style>
 </head>
 <body>
@@ -393,10 +430,13 @@
       <div class="logo-icon">🎰</div>
       <div class="logo-text">
         <h1>Banca Bicho</h1>
-        <span>Painel Demonstrativo Interativo</span>
+        <span>Painel com Banco de Dados</span>
       </div>
     </div>
-    <span class="badge-demo">Ambiente de Simulação</span>
+    <div class="usuario-info" id="usuario-header">
+      <span id="usuario-nome">Carregando...</span>
+      <button onclick="sairDoSistema()">Sair</button>
+    </div>
   </header>
 
   <main>
@@ -441,7 +481,7 @@
             <label for="valor">Valor da Aposta (R$)</label>
             <input type="number" id="valor" class="form-control" min="1" max="1000" placeholder="Ex: 5" required>
           </div>
-          <button type="submit" class="btn">Registrar Aposta Fictícia</button>
+          <button type="submit" class="btn" id="btn-aposta">Registrar Aposta</button>
         </form>
       </section>
 
@@ -453,7 +493,7 @@
         <div id="resultados-container">
           <!-- Gerado via JavaScript -->
         </div>
-        <button onclick="realizarSorteio()" class="btn btn-secondary">Girar Globo / Sorteio 🎲</button>
+        <button onclick="realizarSorteio()" class="btn btn-secondary" id="btn-sorteio">Girar Globo / Sorteio 🎲</button>
       </section>
     </div>
 
@@ -483,10 +523,19 @@
   </main>
 
   <footer>
-    <p>Banca Bicho © 2026 • Sem depósitos ou transações financeiras reais (Fictício para estudos)</p>
+    <p>Banca Bicho © 2026 • Com persistência de dados em banco de dados</p>
   </footer>
 
   <script>
+    // ========== CONFIGURAÇÃO ==========
+    const API_URL = 'http://localhost:5000/api';
+    let usuarioAtual = null;
+    let saldo = 0;
+    let historico = [];
+    let apostaAtiva = null;
+    let resultadosAtuais = [];
+    let ultimaApostaid = null;
+
     // Banco de Dados do Jogo do Bicho
     const BICHOS = [
       { grupo: "01", nome: "Avestruz", emoji: "🪶", dezenas: ["01", "02", "03", "04"] },
@@ -516,42 +565,76 @@
       { grupo: "25", nome: "Vaca", emoji: "🐄", dezenas: ["97", "98", "99", "00"] }
     ];
 
-    // Variáveis de Estado salvas no Navegador (LocalStorage)
-    let saldo = parseFloat(localStorage.getItem('banca_saldo')) || 2345.00;
-    let historico = JSON.parse(localStorage.getItem('banca_historico')) || [
-      { mensagem: "Saldo demonstrativo inicial", valor: 2345.00, estilo: "ganho", data: "13:50" }
-    ];
-    let apostaAtiva = null;
-    let resultadosAtuais = [];
-
     // Formatar Valor Monetário
     function formatarMoeda(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Inicialização
-    window.onload = () => {
-      atualizarSaldoVisual();
+    // ========== INICIALIZAÇÃO ==========
+    window.onload = async () => {
+      await inicializarUsuario();
       renderizarBichos();
-      renderizarHistorico();
       inicializarResultadosFicticios();
       atualizarPlaceholderPalpite();
     };
 
+    async function inicializarUsuario() {
+      // Gerar ID de usuário único (simulado)
+      usuarioAtual = 'usuario_' + Math.random().toString(36).substr(2, 9);
+      
+      try {
+        const res = await fetch(`${API_URL}/usuario`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario: usuarioAtual })
+        });
+
+        const data = await res.json();
+        saldo = data.saldo;
+        document.getElementById('usuario-nome').textContent = `👤 ${usuarioAtual}`;
+        atualizarSaldoVisual();
+        await carregarHistorico();
+      } catch (err) {
+        console.error('Erro ao inicializar usuário:', err);
+        alert('Erro ao conectar com o servidor');
+      }
+    }
+
+    async function carregarHistorico() {
+      try {
+        const res = await fetch(`${API_URL}/historico/${usuarioAtual}`);
+        historico = await res.json();
+        renderizarHistorico();
+      } catch (err) {
+        console.error('Erro ao carregar histórico:', err);
+      }
+    }
+
     function atualizarSaldoVisual() {
       document.getElementById('saldo-texto').innerText = formatarMoeda(saldo);
-      localStorage.setItem('banca_saldo', saldo.toFixed(2));
     }
 
-    // Adicionar Saldo do Gerente - CORRIGIDO
-    function adicionarSaldoGerente() {
-      saldo = saldo + 100.00;  // Garante que está somando corretamente
-      atualizarSaldoVisual();
-      adicionarAoExtrato("Crédito demonstrativo adicionado pelo gerente", 100.00, "ganho");
-      console.log("Novo saldo após gerente:", saldo); // Debug
+    // Adicionar Saldo do Gerente
+    async function adicionarSaldoGerente() {
+      try {
+        const res = await fetch(`${API_URL}/adicionar-saldo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario: usuarioAtual, valor: 100.00 })
+        });
+
+        const data = await res.json();
+        saldo = data.novo_saldo;
+        atualizarSaldoVisual();
+        await carregarHistorico();
+        alert('✅ R$ 100,00 adicionados!');
+      } catch (err) {
+        console.error('Erro ao adicionar saldo:', err);
+        alert('Erro ao adicionar saldo');
+      }
     }
 
-    // Renderizar o Guia Rápido
+    // Renderizar Bichos
     function renderizarBichos() {
       const container = document.getElementById('bichos-container');
       container.innerHTML = '';
@@ -582,48 +665,78 @@
       });
     }
 
-    // Troca de Placeholders
+    // Atualizar Placeholder
     function atualizarPlaceholderPalpite() {
       const tipo = document.getElementById('tipo').value;
       const input = document.getElementById('palpite');
       if (tipo === 'milhar') {
         input.placeholder = "4 dígitos (Ex: 2580)";
         input.max = "9999";
-        input.min = "0000";
       } else if (tipo === 'centena') {
         input.placeholder = "3 dígitos (Ex: 580)";
         input.max = "999";
-        input.min = "000";
       } else {
         input.placeholder = "Grupo de 01 a 25";
         input.max = "25";
-        input.min = "1";
       }
       input.value = '';
     }
 
-    // Registrar Aposta
-    document.getElementById('form-aposta').addEventListener('submit', function(e) {
+    // ========== REGISTRO DE APOSTA ==========
+    document.getElementById('form-aposta').addEventListener('submit', async function(e) {
       e.preventDefault();
+
       const tipo = document.getElementById('tipo').value;
       const palpite = document.getElementById('palpite').value.toString().padStart(tipo === 'milhar' ? 4 : tipo === 'centena' ? 3 : 2, '0');
       const valor = parseFloat(document.getElementById('valor').value);
 
       if (valor > saldo) {
-        alert("Sem saldo! Clique no botão do gerente para ganhar mais R$ 100,00.");
+        alert("❌ Saldo insuficiente! Clique no botão do gerente para ganhar mais R$ 100,00.");
         return;
       }
 
-      saldo = saldo - valor;  // Garante subtração correta
-      atualizarSaldoVisual();
+      const btn = document.getElementById('btn-aposta');
+      btn.disabled = true;
+      btn.textContent = 'Registrando...';
 
-      apostaAtiva = { tipo, palpite, valor };
+      try {
+        const res = await fetch(`${API_URL}/apostar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario: usuarioAtual,
+            tipo,
+            palpite,
+            valor
+          })
+        });
 
-      adicionarAoExtrato(`Aposta em ${tipo.toUpperCase()} • N° ${palpite}`, -valor, 'perda');
-      alert(`Palpite de ${formatarMoeda(valor)} registrado no número ${palpite}! Agora clique em "Girar Globo" para rodar o sorteio.`);
-      
-      // Limpar formulário
-      document.getElementById('form-aposta').reset();
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(`❌ Erro: ${data.erro}`);
+          btn.disabled = false;
+          btn.textContent = 'Registrar Aposta';
+          return;
+        }
+
+        saldo = data.novo_saldo;
+        ultimaApostaid = data.aposta_id;
+        atualizarSaldoVisual();
+        await carregarHistorico();
+
+        apostaAtiva = { tipo, palpite, valor, id: ultimaApostaid };
+
+        alert(`✅ Palpite de ${formatarMoeda(valor)} registrado no número ${palpite}!\n\nAgora clique em "Girar Globo" para rodar o sorteio.`);
+        document.getElementById('form-aposta').reset();
+        btn.disabled = false;
+        btn.textContent = 'Registrar Aposta';
+      } catch (err) {
+        console.error('Erro ao registrar aposta:', err);
+        alert('❌ Erro ao registrar aposta');
+        btn.disabled = false;
+        btn.textContent = 'Registrar Aposta';
+      }
     });
 
     function encontrarBichoPorMilhar(milhar) {
@@ -653,8 +766,8 @@
       });
     }
 
-    // Sorteio
-    function realizarSorteio() {
+    // ========== SORTEIO ==========
+    async function realizarSorteio() {
       resultadosAtuais = [];
       for (let i = 1; i <= 5; i++) {
         const num = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -667,15 +780,12 @@
       desenharTabelaResultados();
 
       if (apostaAtiva) {
-        verificarGanhador();
-      } else {
-        adicionarAoExtrato("Novo Sorteio da Extração Realizado 🎰", 0, '');
+        await verificarGanhador();
       }
     }
 
-    // Verificar se acertou o palpite
-    function verificarGanhador() {
-      const { tipo, palpite, valor } = apostaAtiva;
+    async function verificarGanhador() {
+      const { tipo, palpite, valor, id } = apostaAtiva;
       const primeiroPremio = resultadosAtuais[0];
       let ganhou = false;
       let multiplicador = 0;
@@ -696,44 +806,75 @@
 
       if (ganhou) {
         const premioGanho = valor * multiplicador;
-        saldo = saldo + premioGanho;  // Garante soma correta
-        atualizarSaldoVisual();
-        adicionarAoExtrato(`🎉 GANHOU! Prêmio da Aposta N° ${palpite}`, premioGanho, 'ganho');
-        alert(`Parabéns! Você acertou e levou ${formatarMoeda(premioGanho)}!`);
+
+        try {
+          const res = await fetch(`${API_URL}/processar-resultado`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usuario: usuarioAtual,
+              aposta_id: id,
+              ganhou: true,
+              premio: premioGanho
+            })
+          });
+
+          const data = await res.json();
+          saldo = data.novo_saldo;
+          atualizarSaldoVisual();
+          await carregarHistorico();
+
+          alert(`🎉 Parabéns! Você acertou e levou ${formatarMoeda(premioGanho)}!`);
+        } catch (err) {
+          console.error('Erro ao processar resultado:', err);
+        }
       } else {
-        alert(`O primeiro prêmio deu ${primeiroPremio.numero} (${primeiroPremio.bicho.nome}). Não foi dessa vez!`);
+        alert(`❌ O primeiro prêmio deu ${primeiroPremio.numero} (${primeiroPremio.bicho.nome}). Não foi dessa vez!`);
+
+        try {
+          await fetch(`${API_URL}/processar-resultado`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usuario: usuarioAtual,
+              aposta_id: id,
+              ganhou: false,
+              premio: 0
+            })
+          });
+        } catch (err) {
+          console.error('Erro ao registrar derrota:', err);
+        }
       }
-      
-      apostaAtiva = null; 
+
+      apostaAtiva = null;
     }
 
-    // Gerenciar Histórico de Transações no UI e no LocalStorage
-    function adicionarAoExtrato(mensagem, valor, estilo) {
-      const data = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      historico.unshift({ mensagem, valor, estilo, data });
-      
-      // Limitar a 15 transações para não lotar a tela
-      if (historico.length > 15) historico.pop();
-
-      localStorage.setItem('banca_historico', JSON.stringify(historico));
-      renderizarHistorico();
-    }
-
+    // Renderizar Histórico
     function renderizarHistorico() {
       const container = document.getElementById('extrato-container');
       container.innerHTML = '';
       historico.forEach(item => {
+        const tipoClass = item.tipo === 'ganho' ? 'ganho' : item.tipo === 'perda' ? 'perda' : '';
         const valorTexto = item.valor !== 0 ? `<b>${item.valor > 0 ? '+' : ''}${formatarMoeda(item.valor)}</b>` : '';
+        const data = new Date(item.data_transacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
         container.innerHTML += `
-          <div class="transacao ${item.estilo}">
+          <div class="transacao ${tipoClass}">
             <div>
               <span>${item.mensagem}</span><br>
-              <small style="color: var(--text-light);">${item.data}</small>
+              <small style="color: var(--text-light);">${data}</small>
             </div>
             <div>${valorTexto}</div>
           </div>
         `;
       });
+    }
+
+    function sairDoSistema() {
+      if (confirm('Deseja realmente sair?')) {
+        location.reload();
+      }
     }
   </script>
 </body>
